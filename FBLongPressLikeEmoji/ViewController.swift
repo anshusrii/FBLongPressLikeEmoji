@@ -57,16 +57,6 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     
 }
 
-enum ReactionButtonTag: Int {
-    case blueLike
-    case redHeart
-    case laugh
-    case surprised
-    case cry
-    case angry
-}
-
-
 class FeedCell: UICollectionViewCell {
     static var identifier = {
         return String.init(describing: self)
@@ -81,9 +71,8 @@ class FeedCell: UICollectionViewCell {
     
     let likeButton : UIButton = {
         let button = UIButton(type: .custom)
-        button.imageView?.frame = CGRect(x: 0, y: 0, width: 20, height: 20)
         button.imageView?.contentMode = .scaleAspectFit
-        button.titleEdgeInsets = UIEdgeInsetsMake(0, 8, 0, 0)
+//        button.titleEdgeInsets = UIEdgeInsetsMake(4, 4, 4, 4)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
         button.setTitleColor(.gray, for: .normal)
         button.setTitle("Like", for: .normal)
@@ -102,90 +91,58 @@ class FeedCell: UICollectionViewCell {
         return button
     }()
     
-    let blueLikeButton : UIButton = {
-        let button = UIButton(type: .custom)
-        button.tag = ReactionButtonTag.blueLike.rawValue
-        button.setImage(#imageLiteral(resourceName: "blue_like"), for: .normal)
-        return button
+    
+    var emojiView: UIImageView?
+    
+    var emojiContainerView : UIView = {
+        
+        let emojiPadding: CGFloat = 6
+        let emojiHeight: CGFloat = 38
+        
+        let arrangedSubviews = [#imageLiteral(resourceName: "blue_like"), #imageLiteral(resourceName: "cry_laugh"), #imageLiteral(resourceName: "red_heart"), #imageLiteral(resourceName: "surprised"), #imageLiteral(resourceName: "cry"), #imageLiteral(resourceName: "angry")].map { (image) -> UIImageView in
+            let imageView = UIImageView(image: image)
+            imageView.frame = CGRect(x: 0, y: 0, width: emojiHeight, height: emojiHeight)
+            imageView.isUserInteractionEnabled = true
+            return imageView
+        }
+        
+        let stackView = UIStackView(arrangedSubviews: arrangedSubviews)
+        stackView.distribution = .fillEqually
+        stackView.spacing = CGFloat(emojiPadding)
+        stackView.layoutMargins = UIEdgeInsetsMake(emojiPadding, emojiPadding, emojiPadding, emojiPadding)
+        stackView.isLayoutMarginsRelativeArrangement = true
+        
+        let width = (emojiPadding + emojiHeight) * CGFloat(arrangedSubviews.count) + emojiPadding
+        let height = emojiHeight + (2 * emojiPadding)
+        
+        let view = UIView(frame: CGRect(x: 0, y: 0, width: width, height: height))
+        
+        stackView.frame = view.frame
+        stackView.layer.cornerRadius = 25
+        stackView.clipsToBounds = true
+        
+        view.addSubview(stackView)
+        view.backgroundColor = .white
+        view.layer.cornerRadius = view.frame.height / 2
+        view.layer.shadowColor = UIColor(white: 0.4, alpha: 0.4).cgColor
+        view.layer.shadowOffset = CGSize(width: 0, height: 4)
+        view.layer.shadowOpacity = 0.5
+        view.layer.shadowRadius = 8
+        
+        return view
     }()
     
-    let redHeartButton : UIButton = {
-        let button = UIButton(type: .custom)
-        button.tag = ReactionButtonTag.redHeart.rawValue
-        button.setImage(#imageLiteral(resourceName: "red_heart"), for: .normal)
-        return button
-    }()
-    
-    let laughButton : UIButton = {
-        let button = UIButton(type: .custom)
-        button.tag = ReactionButtonTag.laugh.rawValue
-        button.setImage(#imageLiteral(resourceName: "cry_laugh"), for: .normal)
-        return button
-    }()
-    
-    let surprisedButton : UIButton = {
-        let button = UIButton(type: .custom)
-        button.tag = ReactionButtonTag.surprised.rawValue
-        button.setImage(#imageLiteral(resourceName: "surprised"), for: .normal)
-        return button
-    }()
-    
-    let cryButton : UIButton = {
-        let button = UIButton(type: .custom)
-        button.tag = ReactionButtonTag.cry.rawValue
-        button.setImage(#imageLiteral(resourceName: "cry"), for: .normal)
-        return button
-    }()
-    
-    let angryButton : UIButton = {
-        let button = UIButton(type: .custom)
-        button.tag = ReactionButtonTag.angry.rawValue
-        button.setImage(#imageLiteral(resourceName: "angry"), for: .normal)
-        return button
-    }()
-    
-    var emojiContainerView : UIStackView!
-    var overlayView: UIView!
-    
-    fileprivate func setupEmojiContainer() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tapHandler))
-        overlayView = UIView(frame: contentView.frame)
-        overlayView.isUserInteractionEnabled = true
-        overlayView.backgroundColor = .clear
-        overlayView.addGestureRecognizer(tapGesture)
-        
-        blueLikeButton.addTarget(self, action: #selector(reactionHandler), for: .touchUpInside)
-        redHeartButton.addTarget(self, action: #selector(reactionHandler), for: .touchUpInside)
-        laughButton.addTarget(self, action: #selector(reactionHandler), for: .touchUpInside)
-        surprisedButton.addTarget(self, action: #selector(reactionHandler), for: .touchUpInside)
-        cryButton.addTarget(self, action: #selector(reactionHandler), for: .touchUpInside)
-        angryButton.addTarget(self, action: #selector(reactionHandler), for: .touchUpInside)
-        
-        
-        
-        emojiContainerView = UIStackView(arrangedSubviews: [blueLikeButton, redHeartButton, laughButton, surprisedButton, cryButton, angryButton])
-        
-        emojiContainerView.backgroundColor = .white
-        emojiContainerView.distribution = .fillProportionally
-        emojiContainerView.frame = CGRect(x: 0, y: 0, width: 200, height: 50)
-        
-        emojiContainerView.layer.cornerRadius = 25
-        emojiContainerView.clipsToBounds = true
-    }
-    
-    @objc fileprivate func reactionHandler(_ button: UIButton) {
-        removeEmojiContainer()
-        print("button.tag: \(button.tag)")
-        likeButton.setImage(button.currentImage, for: .normal)
+    @objc fileprivate func reactionHandler(_ imageView: UIImageView) {
+        resetAnimatedEmoji(remove: true)
+        likeButton.setImage(imageView.image, for: .normal)
     }
     
     @objc func tapHandler() {
-        removeEmojiContainer()
+        resetAnimatedEmoji(remove: true)
     }
     
     fileprivate func removeEmojiContainer() {
         emojiContainerView.removeFromSuperview()
-        overlayView.removeFromSuperview()
     }
     
     fileprivate func setupFooterView() {
@@ -209,22 +166,64 @@ class FeedCell: UICollectionViewCell {
         contentView.addSubview(imageView)
         
         setupFooterView()
-        setupEmojiContainer()
         
     }
     
     @objc func longPressGestureHandler (_ gesture: UILongPressGestureRecognizer) {
         if gesture.state == .began {
+            
             handleGestureBegan(gesture)
+            
         } else if gesture.state == .ended {
-//            emojiContainerView.removeFromSuperview()
-//            overlayView.removeFromSuperview()
+            if let imageView = emojiView {
+                reactionHandler(imageView)
+            }
+            resetAnimatedEmoji(remove: true)
+            
+        }else if gesture.state == .changed {
+            
+            handleGestureChanged(gesture)
+            
         }
     }
     
+    fileprivate func resetAnimatedEmoji(remove: Bool) {
+       
+        UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+            
+            let stackView = self.emojiContainerView.subviews.first
+            stackView?.subviews.forEach({ (imageView) in
+                imageView.transform = .identity
+            })
+            if remove == true {
+                self.emojiContainerView.alpha = 0
+                self.emojiContainerView.transform = self.emojiContainerView.transform.translatedBy(x: 0, y: 50)
+            }
+        }, completion: { (_) in
+            if remove == true {
+                self.removeEmojiContainer()
+            }
+        })
+    }
+    
+    fileprivate func handleGestureChanged (_ gr: UILongPressGestureRecognizer) {
+        
+        let pressedLocation = gr.location(in: emojiContainerView)
+        
+        let hitTestView = emojiContainerView.hitTest(CGPoint(x: pressedLocation.x, y: emojiContainerView.frame.height / 2), with: nil)
+        if let hitTestView = hitTestView as? UIImageView {
+            emojiView = hitTestView
+            UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+                self.resetAnimatedEmoji(remove: false)
+                
+                hitTestView.transform = CGAffineTransform(translationX: 0, y: -50)
+            })
+        }
+        
+    }
+    
     func handleGestureBegan(_ gesture: UILongPressGestureRecognizer) {
-        contentView.addSubview(overlayView)
-        overlayView.addSubview(emojiContainerView)
+        contentView.addSubview(emojiContainerView)
         
         let pressedLocation = gesture.location(in: contentView)
         let centeredX = (contentView.frame.width - emojiContainerView.frame.width) / 2
